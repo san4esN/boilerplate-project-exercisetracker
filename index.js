@@ -13,7 +13,7 @@ class Exercise{
 }
 class User{
   constructor(name){
-    this.name = name;
+    this.username = name;
     this.exercises = [];
   }
 }
@@ -21,41 +21,35 @@ let usersLogs = new Map
 app.use(bodyParser.urlencoded({ extended: false }))
 app.use(cors())
 app.use(express.static('public'))
-/*app.get('/', (req, res) => {
-  res.sendFile(__dirname + '/views/index.html')
-});*/
 
-//app.use('/public', express.static(`${process.cwd()}/public`));
 app.all('/', function(req, res) {
   res.sendFile(process.cwd() + '/views/index.html');
 });
 
 function getUser(descr){
   for (const entry of usersLogs) {
-    if(entry[0]===descr || entry[1].name === descr){
-      //return [...new Map().set(entry[0],entry[1]).entries()][0];
+    if(entry[0]===descr || entry[1].username === descr){
       const deepCopy = JSON.parse(JSON.stringify(entry))
       return deepCopy
     }
   }
   return undefined;
-  //return [...usersLogs.keys()].find((value)=>value.name === descr || value._id === descr)
 }
 
 app.post("/api/users",function(req,res){
-  const name = req.body.username
-  let user = getUser(name)
+  const username = req.body.username
+  let user = getUser(username)
   if(typeof(user)==="undefined"){
-    user = new User(name);
+    user = new User(username);
     const id = nanoid(15)
     usersLogs.set(id,user);
     user = getUser(id);
   }
-  res.json({id:user[0], name:user[1].name});
+  res.json({_id:user[0], username:user[1].username});
 })
 
 app.get("/api/users",function(req,res){
-  res.send([...usersLogs.entries()].map((user)=>({id:user[0], name:user[1].name})))
+  res.send([...usersLogs.entries()].map((user)=>({_id:user[0], username:user[1].username})))
 })
 
 app.post("/api/users/:_id?/exercises",function(req,res){
@@ -68,7 +62,7 @@ app.post("/api/users/:_id?/exercises",function(req,res){
   user[1].exercises.push(newExercise)
   usersLogs.set(userId,user[1])
   res.json({
-    name:user[1].name,
+    username:user[1].username,
     _id:user[0],
     description:newExercise.description,
     duration:newExercise.duration,
@@ -91,15 +85,8 @@ app.get("/api/users/:id/logs",function(req,res){
     value.date = new Date(value.date).toDateString()
     return value
   })
-  res.json({_id:user[0],name:user[1].name,count:user[1].exercises.length, log:user[1].exercises})
+  res.json({_id:user[0],username:user[1].username,count:user[1].exercises.length, log:user[1].exercises})
 })
-
-/*app.get("/api/users/:id/logs",function(req,res){
-  const id = req.params.id;
-  const user = getUser(id);
-  //filter
-  res.json({_id:user[0],name:user[1].name,log:user[1].exercises})
-})*/
 
 const listener = app.listen(process.env.PORT || 3000, () => {
   console.log('Your app is listening on port ' + listener.address().port)
